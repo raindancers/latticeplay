@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { LatticeStack } from '../lib/lattice-stack';
+import { LatticeStack } from '../lib/stack/lattice-stack';
 
 const app = new cdk.App();
 new LatticeStack(app, 'LatticeStack', {
