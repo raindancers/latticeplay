@@ -14,7 +14,7 @@ import * as constructs from 'constructs'
 
 
 import * as lattice from './index'
-import { LatticeAuthType } from './index';
+
 
 
 export interface LatticeServiceNetworkProps {
@@ -146,7 +146,7 @@ export class LatticeServiceNetwork extends constructs.Construct {
 	
   }
 
-  public associateService(service: lattice.LatticeService, dnsEntry?: lattice.DnsEntry, tags?: cdk.Tag[]): void {
+  public associateService(service: lattice.LatticeService, dnsEntry?: vpc_lattice.CfnServiceNetworkServiceAssociation.DnsEntryProperty, tags?: cdk.Tag[]): void {
 
 	const cfntags: cdk.CfnTag[] = []
 
@@ -161,10 +161,7 @@ export class LatticeServiceNetwork extends constructs.Construct {
 	}
 
 	new vpc_lattice.CfnServiceNetworkServiceAssociation(this, 'LatticeServiceAssociation', /* all optional props */ {
-		dnsEntry: {
-		  domainName: lattice.dnsEntry.name,
-		  hostedZoneId: dnsEntry.r53zone.hostedZoneId,
-		},
+		dnsEntry: dnsEntry,
 		serviceIdentifier: service.serviceId,
 		serviceNetworkIdentifier: this.serviceNetworkId,
 		tags: cfntags

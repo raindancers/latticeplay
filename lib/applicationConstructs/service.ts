@@ -1,26 +1,31 @@
 import * as cdk from 'aws-cdk-lib';
 
 import { 
-  aws_vpclattice as vpc_lattice,
-  aws_ec2 as ec2,
+  aws_vpclattice as vpclattice,
   aws_certificatemanager as certificatemanager,
-  aws_route53 as route53,
-  aws_s3 as s3,
-  aws_logs as logs,
-  aws_kinesis as kinesis
 } 
 from 'aws-cdk-lib';
-import { AuthType } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import * as constructs from 'constructs'
-
-
 
 import * as lattice from './index'
 
+export interface WeightedTargetGroup {
+	readonly target: lattice.LatticeTargetGroup,
+	readonly weight?: number | undefined
+}
+
+export interface AddListenerProps {
+	name: string
+	defaultResponse?: lattice.FixedResponse | WeightedTargetGroup[] | undefined
+	protocol?: lattice.Protocol | undefined
+	port?: number | undefined
+}
 
 export interface LatticeServiceProps {
+	
 	readonly authType?: lattice.LatticeAuthType | undefined,
-	readonly dnsEntry?: lattice.DnsEntry | undefined,
+	readonly dnsEntry?: vpclattice.CfnService.DnsEntryProperty | undefined,
+	readonly certificate?: certificatemanager.Certificate | undefined
 	readonly customDomain?: string
 	readonly tags?: cdk.Tag[] | undefined 
 	readonly description?: string | undefined
@@ -30,16 +35,7 @@ export interface LatticeServiceProps {
 export class LatticeService extends constructs.Construct {
 
 	serviceId: string
-	certificate: certificatemanager.Certificate | undefined
-	dnsEntry: lattice.DnsEntry | undefined
-	customDomain: string | undefined
-	
-
-	public static fromLatticeServiceArn(scope: constructs.Construct, id: string, serviceArn: string): LatticeService {
-		return new LatticeService(scope, id, { serviceId: serviceArn })
-	}
-
-	
+		
 	constructor(scope: constructs.Construct, id: string, props: LatticeServiceProps) {
 		super(scope, id);
 
@@ -58,44 +54,105 @@ export class LatticeService extends constructs.Construct {
 		}
 
 		let certificateArn: string | undefined = undefined
-		if (this.certificate) {
-			certificateArn = this.certificate.certificateArn
+		if (props.certificate) {
+			certificateArn = props.certificate.certificateArn
 		}
 
-		const service = new vpc_lattice.CfnService(this, 'LatticeService', /* all optional props */ {
+		const service = new vpclattice.CfnService(this, 'LatticeService', /* all optional props */ {
 			authType: props.authType,
 			certificateArn: certificateArn,
 			customDomainName: props.customDomain,
-			dnsEntry: {
-			  domainName: props.dnsEntry?.name,
-			  hostedZoneId: props.dnsEntry?.r53zone.hostedZoneId 
-			},
+			dnsEntry: props.dnsEntry,
 			name: props.name,
 			tags: serviceTags,
 		});
 
 		this.serviceId = service.attrArn
+
 	}
 
-	public addCertificate(certificate: certificatemanager.Certificate): void {
-		this.certificate = certificate
-	}
-
-	public addDnsEntry(dnsEntry: lattice.DnsEntry): void {
 
 	// TODO. It seems that the Forward has not yet got into cdk. 
 	//public addListener(protocol: Protocol, defaultAction: Forward | FixedResponse,  name?: string, port?: number, ): void {
-	public addListener(name: string, protocol: Protocol, defaultAction: Forward,   port?: number, ): string {
+
+	public addListener(props: AddListenerProps): string {
 		
-		const listener = new lattice.CfnListener(this, `Listener-${name}`, {
+		// check the the port is in range if it is specificed
+		if (props.port) {
+			if (props.port < 0 || props.port > 65535) {
+				throw new Error("Port out of range")
+			}
+		
+		}
+		// default to using HTTPS
+		let protocol = props.protocol ?? lattice.Protocol.HTTPS 
+		
+		// if its not specified, set it to the default port based on the protcol
+		let port: number 
+		switch(protocol) {
+			case lattice.Protocol.HTTP:
+				port = props.port ?? 80
+				break;
+			case lattice.Protocol.HTTPS:
+				port = props.port ?? 443
+				break;
+			default:
+				throw new Error("Protocol not supported")
+		}
+
+		// the default action is a not found
+		let defaultAction: vpclattice.CfnListener.DefaultActionProperty = { 
+				fixedResponse: {
+					statusCode: lattice.FixedResponse.NOT_FOUND,
+				}
+		}
+		// Fixed Responses are numbers from the Enum
+		if (props.defaultResponse) {
+			if (typeof(props.defaultResponse) === 'number')  { 
+				defaultAction = { 
+					fixedResponse: {
+						statusCode: props.defaultResponse
+					}
+				}
+			} else {
+
+				let targetGroups: vpclattice.CfnListener.WeightedTargetGroupProperty[] = [];
+				let requireWeight: boolean = false
+				
+				if (props.defaultResponse.length > 1) {
+					requireWeight = true
+				}
+				
+				props.defaultResponse.forEach((targetGroup) => {
+
+					if (requireWeight && !targetGroup.weight) {
+						throw new Error("Weights are required for multiple target groups")
+					}
+					targetGroups.push({
+						targetGroupIdentifier: targetGroup.target.targetGroupId,
+						weight: targetGroup.weight ?? 100
+					})
+				})
+
+				defaultAction = { 
+					forward: { 
+						targetGroups: targetGroups,
+					}
+				}
+				
+			}
+		}
+
+		
+		const listener = new lattice.LatticeListener(this, `Listener-${props.name}`, {
 			defaultAction: defaultAction,
 			protocol: protocol,
-			name: name,
 			port: port,
 			serviceIdentifier: this.serviceId,
+			name: props.name
 		  });
 
-		  return listener.attrId
+		  return listener.listenerId
 
 	}
 	
