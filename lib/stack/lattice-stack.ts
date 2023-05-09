@@ -5,14 +5,11 @@ import {
   aws_lambda,
 }
 from 'aws-cdk-lib'
-import { Handler } from 'aws-cdk-lib/aws-lambda';
 import * as constructs from 'constructs'
-import * as lattice from '../applicationConstructs/lattice'
+import * as lattice from '../applicationConstructs/index'
 
 
-
-
-export class LatticeStack extends cdk.Stack {
+export class LatticeDemoStack extends cdk.Stack {
   constructor(scope: constructs.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -21,79 +18,43 @@ export class LatticeStack extends cdk.Stack {
       vpc: vpcOne
     })
 
+    const functionOne = new aws_lambda.Function(this, 'FunctionOne', {})
+
+    const targetGroupOne = new lattice.LatticeTargetGroup(this, 'TargetOne', {
+      name: 'TargetGroupOne',
+      type: lattice.TargetType.LAMBDA,
+      lambdaTargets: [
+        functionOne
+      ],
+    })
+
     const serviceOne = new lattice.LatticeService(this, 'ServiceOne', {
       authType: lattice.LatticeAuthType.NONE,
       description: 'ServiceOne is a thing of wonder',
       name: 'serviceOne'
     })
 
-    const functionOne = new aws_lambda.Function(this, 'FunctionOne', {
-      runtime: aws_lambda.Runtime.PYTHON_3_9,
-      code: 
-      handler: 
-    })
-
-    
-    const targetGroupOne = new lattice.LatticeTargetGroup(this, 'TargetOne', {
-      name: 'TargetGroupOne',
-      type: lattice.TargetType.LAMBDA,
-      targets: [{
-        id: 
-        port: 443
-      }],
-      config?: lattice.CfnTargetGroup.TargetGroupConfigProperty | undefined,
-    })
-
-
-
-    const listnerOne = serviceOne.addListener(
-      'serviceOneListner',
-      lattice.Protocol.HTTPS,
-      {
-        forward: {
-          targetGroups: [
-	          { 
-              targetGroupIdentifier: targetGroupOne.targetGroupId ,
-              weight: 100,
-            }
-          ]
-        }
-      }
-    )
-
-    
-
-    
-    const vpcTwo = new ec2.Vpc(this, 'vpcTwo', {})
-    const sgVpcTwo = new ec2.SecurityGroup(this, 'sgTne', {
-      vpc: vpcTwo
-    })
-
-
-    const serviceTwo = new lattice.LatticeService(this, 'ServiceTwo', {
-      authType: lattice.LatticeAuthType.NONE,
-      description: 'ServiceTwo is a thing of distress',
-      name: 'serviceTwo'
+    const listenerOne = serviceOne.addListener({
+      name: 'serviceOneListner',
+      defaultResponse : lattice.FixedResponse.NOT_FOUND,
+      protocol: lattice.Protocol.HTTPS,
     })
     
-    const listnerTwo = serviceOne.addListener(
-      'serviceTwoListner',
-      lattice.Protocol.HTTPS,
-      {
-        forward: {
-          targetGroups: [
-            
-          ]
-        }
-      }
-    )
+    listenerOne.addListenerRule({
+      name: 'listentoLambdaOne',
+      action: [{ target: targetGroupOne }],
+      priority: 100,  
+      pathMatch:  {
+        pathMatchType: lattice.PathMatchType.EXACT,
+        matchKey: '/serviceOne',
+        caseSensitive: false,
+      } 
+    })
     
-    
-
 
     const serviceNetwork = new lattice.LatticeServiceNetwork(this, 'DemoLattice', {
       name: 'mydemolatticenetwork',
-      //authType: lattice.LatticeAuthType.NONE,
+      description: 'Demo Lattice Network'
     }) 
 
     // log to S3
@@ -101,14 +62,15 @@ export class LatticeStack extends cdk.Stack {
     
     //associate  vpcs to lattice serviceNetwork
     serviceNetwork.associateVPC(vpcOne, [sgVpcOne]);
-    serviceNetwork.associateVPC(vpcTwo, [sgVpcTwo]);
     
     // associate services to lattice serviceNetwork
     serviceNetwork.associateService(serviceOne);
-    serviceNetwork.associateService(serviceTwo);
+
+    //share the servicenetwork to another account
+    serviceNetwork.share({
+      name: 'demoShare',
+      principals: ['123456789012']
+    });
     
-
-    // 
-
-  }
+ }
 }
