@@ -3,6 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import { 
   aws_vpclattice as vpclattice,
   aws_certificatemanager as certificatemanager,
+  aws_ram as ram,
 } 
 from 'aws-cdk-lib';
 import * as constructs from 'constructs'
@@ -30,6 +31,7 @@ export interface LatticeServiceProps {
 export class LatticeService extends constructs.Construct {
 
 	serviceId: string
+	serviceArn: string
 	authType: lattice.LatticeAuthType | undefined
 		
 	constructor(scope: constructs.Construct, id: string, props: LatticeServiceProps) {
@@ -64,6 +66,7 @@ export class LatticeService extends constructs.Construct {
 		});
 
 		this.serviceId = service.attrId
+		this.serviceArn = service.attrArn
 
 	}
 
@@ -162,5 +165,21 @@ export class LatticeService extends constructs.Construct {
 		})
 	  }
 	
+	  public share(props: ShareProps): void {
+
+		new ram.CfnResourceShare(this, 'ServiceNetworkShare', {
+			name: props.name,
+			resourceArns: [this.serviceArn],
+			allowExternalPrincipals: props.allowExternalPrincipals,
+			principals: props.principals
+		})
+	  }
+	
+}
+
+export interface ShareProps {
+	name: string;
+	allowExternalPrincipals?: boolean | undefined
+	principals?: string[] | undefined
 }
 

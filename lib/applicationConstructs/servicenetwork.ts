@@ -7,14 +7,15 @@ import {
   aws_route53 as route53,
   aws_s3 as s3,
   aws_logs as logs,
-  aws_kinesis as kinesis
+  aws_kinesis as kinesis,
+  aws_ram as ram,
 } 
 from 'aws-cdk-lib';
+import { principalIsOwnedResource } from 'aws-cdk-lib/aws-iam';
 import * as constructs from 'constructs'
 
 
 import * as lattice from './index'
-
 
 
 export interface LatticeServiceNetworkProps {
@@ -43,6 +44,7 @@ export class LatticeServiceNetwork extends constructs.Construct {
 	 * Service Network Id
 	 */
 	serviceNetworkId: string
+	serviceNetworkArn: string
 
 	authType: lattice.LatticeAuthType |  undefined
 
@@ -78,7 +80,8 @@ export class LatticeServiceNetwork extends constructs.Construct {
     });
 
 
-	this.serviceNetworkId = serviceNetwork.attrArn
+	this.serviceNetworkId = serviceNetwork.attrId
+	this.serviceNetworkArn = serviceNetwork.attrArn
 
   }
 
@@ -168,4 +171,24 @@ export class LatticeServiceNetwork extends constructs.Construct {
 	  });
 
   }
+
+  public share(props: ShareProps): void {
+
+	new ram.CfnResourceShare(this, 'ServiceNetworkShare', {
+		name: props.name,
+		resourceArns: [this.serviceNetworkArn],
+		allowExternalPrincipals: props.allowExternalPrincipals,
+		principals: props.principals
+	})
+  }
+}
+
+// An AWS account ID
+// An Amazon Resource Name (ARN) of an organization in AWS Organizations
+// An ARN of an organizational unit (OU) in AWS Organizations
+
+export interface ShareProps {
+	name: string;
+	allowExternalPrincipals?: boolean | undefined
+	principals?: string[] | undefined
 }
