@@ -69,7 +69,7 @@ export class LatticeDemoStack extends cdk.Stack {
     //share the servicenetwork to another account
     serviceNetwork.share({
       name: 'demoShare',
-      principals: ['123456789012']
+      principals: ['123456789013']
     });
     
  }

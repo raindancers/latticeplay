@@ -3,7 +3,7 @@ import * as lattice from './index'
 import * as constructs from 'constructs'
 
 export interface AuthStatement {
-	readonly effect: lattice.Action;
+	readonly effect: lattice.Effect;
 	readonly principal: any | undefined;
 	readonly resources: string[] | string;
 	readonly conditons: any | undefined;
@@ -43,3 +43,5 @@ export class LatticePolicy extends constructs.Construct {
 		Version: '2012-10-17',
 		Statement: statements
 	  })
+	}
+}
