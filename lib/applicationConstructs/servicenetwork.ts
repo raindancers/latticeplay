@@ -172,7 +172,7 @@ export class LatticeServiceNetwork extends constructs.Construct {
 
   }
 
-  public share(props: ShareProps): void {
+  public share(props: ShareServiceNetworkProps): void {
 
 	new ram.CfnResourceShare(this, 'ServiceNetworkShare', {
 		name: props.name,
@@ -187,7 +187,7 @@ export class LatticeServiceNetwork extends constructs.Construct {
 // An Amazon Resource Name (ARN) of an organization in AWS Organizations
 // An ARN of an organizational unit (OU) in AWS Organizations
 
-export interface ShareProps {
+export interface ShareServiceNetworkProps {
 	name: string;
 	allowExternalPrincipals?: boolean | undefined
 	principals?: string[] | undefined
