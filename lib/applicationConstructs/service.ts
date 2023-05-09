@@ -10,24 +10,67 @@ import * as constructs from 'constructs'
 
 import * as lattice from './index'
 
+/**
+ * Properties for the AddListener Method
+ */
 export interface AddListenerProps {
+	/**
+	 * A name for the listener.
+	 */
 	name: string
+	/** A default Response for the listener, if no rule matches 
+	 * @default a FixedResponse of of Not Found ( 404 )
+	*/
 	defaultResponse?: lattice.FixedResponse | lattice.WeightedTargetGroup[] | undefined
+	/**
+	 * The protocol for the listener.
+	 * @default HTTPS
+	 */
 	protocol?: lattice.Protocol | undefined
+	/**
+	 * The port for the listener.
+	 * @default 80 or 443 depending on the protocol
+	 */
 	port?: number | undefined
 }
 
+
 export interface LatticeServiceProps {
 	
+	/**
+	 * The authentication Type for the service.
+	 * @default NONE
+	 */
 	readonly authType?: lattice.LatticeAuthType | undefined,
+	/**
+	 * Create a DNS entry in R53 for the service. 
+	 */
 	readonly dnsEntry?: vpclattice.CfnService.DnsEntryProperty | undefined,
+	/**
+	 * For HTTPS, provide a certificate from AWS ACM
+	 */
 	readonly certificate?: certificatemanager.Certificate | undefined
+	/**
+	 * a Custom domain to use for this service
+	 */
 	readonly customDomain?: string
+	/**
+	 * Tags for the service
+	 */
 	readonly tags?: cdk.Tag[] | undefined 
+	/**
+	 * Description for the service
+	 */
 	readonly description?: string | undefined
+	/**
+	 * Name for the service
+	 */
 	readonly name?: string | undefined
-}
+} 
 
+/**
+ * Create a Lattice Service
+ */
 export class LatticeService extends constructs.Construct {
 
 	serviceId: string
@@ -71,18 +114,27 @@ export class LatticeService extends constructs.Construct {
 	}
 
 
-	// TODO. It seems that the Forward has not yet got into cdk. 
-	//public addListener(protocol: Protocol, defaultAction: Forward | FixedResponse,  name?: string, port?: number, ): void {
-
-	public addListener(props: AddListenerProps): string {
+	
+	/**
+	 * Add a listener to the service. Using this method is the perferred way of creating a listener
+	 * as there are in depth checks on the inputs. 
+	 * @example
+	 * const listenerOne = serviceOne.addListener({
+     * name: 'serviceOneListner',
+     * defaultResponse : lattice.FixedResponse.NOT_FOUND,
+     * protocol: lattice.Protocol.HTTPS,
+    })
+	 * 
+	 */
+	public addListener(props: AddListenerProps): lattice.LatticeListener {
 		
 		// check the the port is in range if it is specificed
 		if (props.port) {
 			if (props.port < 0 || props.port > 65535) {
 				throw new Error("Port out of range")
 			}
-		
 		}
+
 		// default to using HTTPS
 		let protocol = props.protocol ?? lattice.Protocol.HTTPS 
 		
@@ -151,10 +203,13 @@ export class LatticeService extends constructs.Construct {
 			name: props.name
 		  });
 
-		  return listener.listenerId
+		  return listener
 
 	}
-
+	/**
+	 * add an Authorization Policy to the listender
+	 * @param policy 
+	 */
 	public addAuthPolicy(policy: lattice.LatticePolicy): void {
 	
 		this.authType = lattice.LatticeAuthType.IAM;
@@ -164,8 +219,11 @@ export class LatticeService extends constructs.Construct {
 			resourceIdentifier: this.serviceId,
 		})
 	  }
-	
-	  public share(props: ShareProps): void {
+	/**
+	 * Share the service with other accounts/principals
+	 * @param props 
+	 */
+	public share(props: ShareServiceProps): void {
 
 		new ram.CfnResourceShare(this, 'ServiceNetworkShare', {
 			name: props.name,
@@ -177,7 +235,7 @@ export class LatticeService extends constructs.Construct {
 	
 }
 
-export interface ShareProps {
+export interface ShareServiceProps  {
 	name: string;
 	allowExternalPrincipals?: boolean | undefined
 	principals?: string[] | undefined
