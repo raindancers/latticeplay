@@ -9,14 +9,9 @@ import * as constructs from 'constructs'
 
 import * as lattice from './index'
 
-export interface WeightedTargetGroup {
-	readonly target: lattice.LatticeTargetGroup,
-	readonly weight?: number | undefined
-}
-
 export interface AddListenerProps {
 	name: string
-	defaultResponse?: lattice.FixedResponse | WeightedTargetGroup[] | undefined
+	defaultResponse?: lattice.FixedResponse | lattice.WeightedTargetGroup[] | undefined
 	protocol?: lattice.Protocol | undefined
 	port?: number | undefined
 }
@@ -35,6 +30,7 @@ export interface LatticeServiceProps {
 export class LatticeService extends constructs.Construct {
 
 	serviceId: string
+	authType: lattice.LatticeAuthType | undefined
 		
 	constructor(scope: constructs.Construct, id: string, props: LatticeServiceProps) {
 		super(scope, id);
@@ -59,7 +55,7 @@ export class LatticeService extends constructs.Construct {
 		}
 
 		const service = new vpclattice.CfnService(this, 'LatticeService', /* all optional props */ {
-			authType: props.authType,
+			authType: this.authType,
 			certificateArn: certificateArn,
 			customDomainName: props.customDomain,
 			dnsEntry: props.dnsEntry,
@@ -67,7 +63,7 @@ export class LatticeService extends constructs.Construct {
 			tags: serviceTags,
 		});
 
-		this.serviceId = service.attrArn
+		this.serviceId = service.attrId
 
 	}
 
@@ -155,6 +151,16 @@ export class LatticeService extends constructs.Construct {
 		  return listener.listenerId
 
 	}
+
+	public addAuthPolicy(policy: lattice.LatticePolicy): void {
+	
+		this.authType = lattice.LatticeAuthType.IAM;
+		
+		new vpclattice.CfnAuthPolicy(this, 'AuthPolicy', {
+			policy: policy.policy,
+			resourceIdentifier: this.serviceId,
+		})
+	  }
 	
 }
 

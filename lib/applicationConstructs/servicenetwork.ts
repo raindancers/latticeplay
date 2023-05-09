@@ -82,12 +82,12 @@ export class LatticeServiceNetwork extends constructs.Construct {
 
   }
 
-  public addAuthPolicy(policy: string): void {
+  public addAuthPolicy(policy: lattice.LatticePolicy): void {
 	
 	this.authType = lattice.LatticeAuthType.IAM;
 	
 	new vpc_lattice.CfnAuthPolicy(this, 'AuthPolicy', {
-		policy: policy,
+		policy: policy.policy,
 		resourceIdentifier: this.serviceNetworkId,
 	})
   }

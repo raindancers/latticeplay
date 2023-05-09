@@ -7,10 +7,6 @@ from 'aws-cdk-lib'
 
 import * as lattice from './index'
 import * as constructs from 'constructs'
-import { ProtocolVersion } from './index';
-import { HealthCheck } from 'aws-cdk-lib/aws-appmesh';
-import { match } from 'assert';
-import { ProductStack } from 'aws-cdk-lib/aws-servicecatalog';
 
 export interface TargetGroupHealthCheck {
 	enabled?: boolean | undefined,

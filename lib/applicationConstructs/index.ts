@@ -6,4 +6,4 @@ export * from './servicenetwork'
 export * from './targetgroups'
 export * from './listener'
 export * from './targets'
-
+export * from './authPolicy'
