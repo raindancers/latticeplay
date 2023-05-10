@@ -149,6 +149,7 @@ export class LatticeListener extends constructs.Construct {
 
 	listenerId: string
 	listenerPrioritys: number[] = []
+	serviceIdentifier: string 
 		
 	constructor(scope: constructs.Construct, id: string, props: LatticeListnerProps) {
 		super(scope, id);
@@ -161,6 +162,7 @@ export class LatticeListener extends constructs.Construct {
 		  });
 
 		  this.listenerId = listener.attrId
+		  this.serviceIdentifier = props.serviceIdentifier
 	}
 
 	/**
@@ -342,6 +344,7 @@ export class LatticeListener extends constructs.Construct {
 				match: match,
 				priority: props.priority,
 				listenerIdentifier: this.listenerId,
+				serviceIdentifier: this.serviceIdentifier,
 			})
 		}
 

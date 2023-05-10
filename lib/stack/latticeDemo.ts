@@ -27,7 +27,7 @@ export class LatticeDemoStack extends cdk.Stack {
     })
 
     const targetGroupOne = new lattice.LatticeTargetGroup(this, 'TargetOne', {
-      name: 'TargetGroupOne',
+      name: 'targetgroupOne',
       type: lattice.TargetType.LAMBDA,
       lambdaTargets: [
         functionOne
@@ -37,17 +37,17 @@ export class LatticeDemoStack extends cdk.Stack {
     const serviceOne = new lattice.LatticeService(this, 'ServiceOne', {
       authType: lattice.LatticeAuthType.NONE,
       description: 'ServiceOne is a thing of wonder',
-      name: 'serviceOne'
+      //name: 'serviceOne'
     })
 
     const listenerOne = serviceOne.addListener({
-      name: 'serviceOneListner',
+      name: 'serviceonelistner',
       defaultResponse : lattice.FixedResponse.NOT_FOUND,
       protocol: lattice.Protocol.HTTPS,
     })
     
     listenerOne.addListenerRule({
-      name: 'listentoLambdaOne',
+      name: 'listentolambdaone',
       action: [{ target: targetGroupOne }],
       priority: 100,  
       pathMatch:  {
@@ -59,12 +59,21 @@ export class LatticeDemoStack extends cdk.Stack {
     
 
     const serviceNetwork = new lattice.LatticeServiceNetwork(this, 'DemoLattice', {
-      name: 'mydemolatticenetwork',
+      //name: 'mydemolatticenetwork',
       description: 'Demo Lattice Network'
     }) 
 
+    const loggingBucket = new s3.Bucket(this, 'loggingbucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      versioned: false,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    })
+    
+
     // log to S3
-    serviceNetwork.logToS3(s3.Bucket.fromBucketName(this, 'loggingbucket', 'logbucket'))
+    //serviceNetwork.logToS3(loggingBucket)
     
     //associate  vpcs to lattice serviceNetwork
     serviceNetwork.associateVPC(vpcOne, [sgVpcOne]);
@@ -74,7 +83,7 @@ export class LatticeDemoStack extends cdk.Stack {
 
     //share the servicenetwork to another account
     serviceNetwork.share({
-      name: 'demoShare',
+      name: 'demoshare',
       principals: ['123456789013']
     });
     

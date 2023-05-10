@@ -120,13 +120,14 @@ export class LatticeServiceNetwork extends constructs.Construct {
 	  });
   }
   
-  public logToS3(bucket: s3.IBucket | s3.Bucket, suffix?: string): void {
+  public logToS3(bucket: s3.IBucket | s3.Bucket ): void {
 
-	// TODO. COnsider to parsing the suffix
+	// Seems that you cant' set a suffix for where these are going to be logged to.?
+	// AWS really? thats not consistent with other logging services.
 
 	const cfnAccessLogSubscription = new vpclattice.CfnAccessLogSubscription(this, 'LatticeLoggingtoS3', {
-	  destinationArn: `${bucket.bucketArn}${suffix}`,
-	  resourceIdentifier: this.serviceNetworkId,
+	  destinationArn: bucket.bucketArn,
+	  resourceIdentifier: this.serviceNetworkArn
 		
 	});
   }

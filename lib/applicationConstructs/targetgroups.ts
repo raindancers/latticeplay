@@ -94,7 +94,7 @@ export class LatticeTargetGroup extends constructs.Construct {
 
     const TargetGroup = new vpclattice.CfnTargetGroup(this, 'TargetGroup', {
 		type: props.type,
-		name: props.name,
+		//name: props.name,
 		config: props.config?.targetGroupConfig,
 		targets: targets
 	})
