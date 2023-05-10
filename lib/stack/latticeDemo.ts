@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import {
   aws_s3 as s3,
@@ -18,7 +19,12 @@ export class LatticeDemoStack extends cdk.Stack {
       vpc: vpcOne
     })
 
-    const functionOne = new aws_lambda.Function(this, 'FunctionOne', {})
+    const functionOne = new aws_lambda.Function(this, 'FunctionOne', {
+      runtime: aws_lambda.Runtime.PYTHON_3_10,
+      handler: 'helloWorld.lambda_handler',
+      code: aws_lambda.Code.fromAsset(path.join(__dirname, './lambda' )),
+      timeout:  cdk.Duration.seconds(15),
+    })
 
     const targetGroupOne = new lattice.LatticeTargetGroup(this, 'TargetOne', {
       name: 'TargetGroupOne',
@@ -46,7 +52,7 @@ export class LatticeDemoStack extends cdk.Stack {
       priority: 100,  
       pathMatch:  {
         pathMatchType: lattice.PathMatchType.EXACT,
-        matchKey: '/serviceOne',
+        matchValue: '/serviceOne',
         caseSensitive: false,
       } 
     })

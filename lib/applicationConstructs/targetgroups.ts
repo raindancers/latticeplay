@@ -87,7 +87,7 @@ export class LatticeTargetGroup extends constructs.Construct {
     if ( props.type === lattice.TargetType.LAMBDA && props.config ) {
 		throw new Error('If TargetType is LAMBDA, no configuration is needed');
 	} else {
-		if (!( props.config)) {
+		if ( !(props.config) && props.type !== lattice.TargetType.LAMBDA) {
 			throw Error(`Configuration is required for TargetType: ${props.type}`);
 		}
 	}
@@ -95,7 +95,7 @@ export class LatticeTargetGroup extends constructs.Construct {
     const TargetGroup = new vpclattice.CfnTargetGroup(this, 'TargetGroup', {
 		type: props.type,
 		name: props.name,
-		config: props.config.targetGroupConfig,
+		config: props.config?.targetGroupConfig,
 		targets: targets
 	})
 

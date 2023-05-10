@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { LatticeStack } from '../lib/stack/lattice-stack';
+import { LatticeDemoStack } from '../lib/stack/latticeDemo'
 
 const app = new cdk.App();
-new LatticeStack(app, 'LatticeStack', {
+new LatticeDemoStack(app, 'LatticeStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
