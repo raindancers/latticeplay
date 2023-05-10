@@ -22,6 +22,7 @@
   "dependencies": {
     "aws-cdk-lib": "^2.78.0",
     "constructs": "^10.0.0",
+    "raindancers-network": "^1.26.1",
     "source-map-support": "^0.5.21"
   }
 }
