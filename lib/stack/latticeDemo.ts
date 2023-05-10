@@ -62,6 +62,19 @@ export class LatticeDemoStack extends cdk.Stack {
     const sgVpcOne = new ec2.SecurityGroup(this, 'sgOne', {
       vpc: vpcOne.vpc
     })
+
+    sgVpcOne.addIngressRule(
+      ec2.Peer.ipv4(vpcOne.vpc.vpcCidrBlock),
+      ec2.Port.tcp(80),
+    )
+
+    sgVpcOne.addIngressRule(
+      ec2.Peer.ipv4(vpcOne.vpc.vpcCidrBlock),
+      ec2.Port.tcp(443),
+    )
+
+
+
     // add a hello world lambda function;
     const functionOne = new aws_lambda.Function(this, 'FunctionOne', {
       runtime: aws_lambda.Runtime.PYTHON_3_10,
