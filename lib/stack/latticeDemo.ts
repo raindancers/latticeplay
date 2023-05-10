@@ -72,8 +72,8 @@ export class LatticeDemoStack extends cdk.Stack {
     })
     
 
-    // log to S3
-    //serviceNetwork.logToS3(loggingBucket)
+    //log to S3
+    serviceNetwork.logToS3(loggingBucket)
     
     //associate  vpcs to lattice serviceNetwork
     serviceNetwork.associateVPC(vpcOne, [sgVpcOne]);
