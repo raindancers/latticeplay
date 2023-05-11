@@ -17,6 +17,8 @@
     ]
   },
   "context": {
+    "account": "123456789012",
+    "region": "ap-southeast-2",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

@@ -59,6 +59,7 @@ export class LatticeDemoStack extends cdk.Stack {
       hostname: `testhost-1`,
     });
 
+    // this is the security group that is applied to the interface of the lattice service. 
     const sgVpcOne = new ec2.SecurityGroup(this, 'sgOne', {
       vpc: vpcOne.vpc
     })
